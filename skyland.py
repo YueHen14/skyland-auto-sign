@@ -301,7 +301,7 @@ def input_for_token():
     print("1.使用用户名密码登录（非常推荐）")
     print("2.使用手机验证码登录（非常推荐，但可能因为人机验证失败）")
     print("3.手动输入鹰角网络通行证账号登录(推荐)")
-    mode = input('请输入（1，2，3）：')
+    mode = 3
     if mode == '' or mode == '1':
         token = login_by_password()
     elif mode == '2':
@@ -336,3 +336,4 @@ if __name__ == '__main__':
     end_time = time.time()
     logging.info(f'complete with {(end_time - start_time) * 1000} ms')
     logging.info('===========ending============')
+
