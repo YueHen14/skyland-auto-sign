@@ -2,8 +2,6 @@
 
 明日方舟森空岛一键签到脚本，基于python
 
-fork于gitee内的一名大佬作品https://gitee.com/FancyCabbage/skyland-auto-sign
-
 有三种方法部署
 > 1.自己手动在电脑上运行（不想挂载在服务器上的用户推荐这个，因为可以配合MAA一键签到）
 >
@@ -33,20 +31,16 @@ fork于gitee内的一名大佬作品https://gitee.com/FancyCabbage/skyland-auto-
 
 ## 方法1
 
-1.安装python（3.6及以上）
+1.安装python（3.9版本及以上）。
 
-2.下载`requirements.txt` ，在该目录下打开命令提示符，运行`pip install -r requirements.txt`
+2.克隆源代码
 
-3.下载脚本`skyland.py`、`SecuritySm.py`,这两个文件都要放置在`requirements.txt`文件同目录下
-
-（可选）在config.ini文件中配置ServerChan（Server酱）、Qmsg、PUSHPLUS推送
-
-4.命令提示符运行`python skyland.py`（结果输出如下就代表你成功了）
+3.命令提示符运行`python src/main.py`（结果输出如下就代表你成功了）
 ![img.png](assets/img_0.png)
 
-（以上4步可以用我打好的exe文件直接运行，链接见[release](https://gitee.com/FancyCabbage/skyland-auto-sign/releases)
+（以上3步可以用我打好的exe文件直接运行，链接见[release](https://gitee.com/FancyCabbage/skyland-auto-sign/releases)
 
-5.本软件有3种模式：
+4.本软件有3种模式：
 
 第一个模式和第二个模式不多说了，填入你的信息即可。
 
@@ -70,9 +64,9 @@ fork于gitee内的一名大佬作品https://gitee.com/FancyCabbage/skyland-auto-
 
 可以使用MAA自动执行脚本
 
-MAA在连接设置里有运行前脚本，输入`skyland.py`的路径后，每次连接模拟器时会自动帮你签到。
+MAA在连接设置里有运行前脚本，输入`main.py`的路径后，每次连接模拟器时会自动帮你签到。
 
-如果你用的exe版本的，请输入`skyland.exe`的路径！
+如果你用的exe版本的，请输入`main.exe`的路径！
 ![img_3.png](assets/img_3.png)
 
 第一次执行的话应该还是会出现这个东西
@@ -85,6 +79,7 @@ TOKEN和日志应该都会被存储在MAA根路径下
 ![img_6.png](assets/img_6.png)
 
 <a name="mode2"></a>
+
 ## 方法2
 
 使用华为云挂载服务器签到（华为云有每月免费额度）
@@ -113,10 +108,8 @@ TOKEN和日志应该都会被存储在MAA根路径下
 8.上传完成后应该是这个样子的
 ![img_12.png](assets/img_12.png)
 
-9.选中`INPUT_HYPERGRYPH_TOKEN.txt`，在右边添加你的鹰角通行证 `TOKEN` ,支持多个，换行添加下一个即可。
+9.选中`INPUT_HYPERGRYPH_TOKEN.txt`，在右边添加你的鹰角通行证.支持多个，换行添加下一个即可。
 ![img_13.png](assets/img_13.png)
-
-（可选）ServerChan（Server酱）、Qmsg、PUSHPLUS推送配置在config.ini中
 
 10.保存完毕后，可以点击测试测试一下脚本。创建测试这里直接点击创建即可
 ![img_14.png](assets/img_14.png)
@@ -165,35 +158,36 @@ TOKEN和日志应该都会被存储在MAA根路径下
 
 点击 New repository secret
 
-**创建名为`TOKEN`的环境变量（注意变量名全大写），并填入你在[这个网址](https://web-api.skland.com/account/info/hg)获取的`token` 【`"content":` 字段的值，不加双引号（形如 `大小写字母和数字混合的24位字符`)】，如果要管理多个账号，换行即可**
 
-**如果要开启 Server酱³ APP推送的话，就创建名为`SC3_SENDKEY`和`SC3_UID`(可选）的环境变量；如果是第一次使用 Server酱³ 的话，需要到[Server酱3官网](https://sc3.ft07.com/) 注册一个账号，再在手机上下载Server酱³ App。**
+ **创建名为`TOKEN`的环境变量（注意变量名全大写），并填入你的鹰角网络通行证，如果要管理多个账号，换行即可** 
+
+ **如果要开启 Server酱³ APP 推送的话，就创建名为 `SC3_SENDKEY` 的环境变量；如果是第一次使用 Server酱³ 的话，需要到 [Server酱³ 官网](https://sc3.ft07.com/) 注册一个账号，再在手机上下载 Server酱³ App。**
 
 `SC3_SENDKEY`: Server酱³ SendKey（形如 sctp12345tXXXX...）
 
-`SC3_UID`（可选）: 若不填会从SC3_SENDKEY自动解析（形如 12345)
 
 如果是第一次使用GitHub Action的话，还需要手动打开这个功能 在你仓库上方菜单中进入Actions
 
-点击 I understand... enable them > Enable workflow我明白了……启用它们>启用工作流
+点击 I understand... enable them > Enable workflow
 
 之后就可以自动运行签到了, 想要手动测试的话，选择左侧的Auto Sign > Run workflow, 刷新页面就能看到结果了
+
+现在可以在Github Action Variable中设置变量`EXIT_WHEN_FAIL = on`，当签到发生错误时，脚本会返回错误，进而你会收到来自Github的邮件，及时知道脚本运行情况
 
 <a name="mode3"></a>
 
 ## 使用NAS部署
 
-其实和Github Action的配置方式一样，导入脚本以后，**创建一个`TOKEN`的环境变量**即可。
+其实和Github Action的配置方式一样，导入脚本以后， **创建一个`TOKEN`的环境变量** 即可。
 
-**如果要开启 Server酱³ APP推送的话，就创建名为`SC3_SENDKEY`和`SC3_UID`(可选）的环境变量。**
+ **如果要开启 Server酱³ APP 推送的话，就创建名为 `SC3_SENDKEY` 的环境变量。如果是第一次使用 Server酱³ 的话，需要到 [Server酱³ 官网](https://sc3.ft07.com/) 注册一个账号，再在手机上下载 Server酱³ App。** 
 
-SC3_SENDKEY: Server酱³ SendKey（形如 sctp12345tXXXX...）。
+`SC3_SENDKEY`: Server酱³ SendKey（形如 sctp12345tXXXX...）。
 
-SC3_UID（可选）: 若不填会从SC3_SENDKEY自动解析。（形如 12345）。
 
 每个面板可能创建方式不太一样，不展示了
 
-<a name="multiple_account">
+<a name="multiple_account"></a>
 
 ## 多账号支持
 
@@ -205,7 +199,7 @@ SC3_UID（可选）: 若不填会从SC3_SENDKEY自动解析。（形如 12345）
 
 **不要去登出账号，否则鹰角网络通行证会失效！**
 
-如果要添加多个账号，请删除浏览器缓存。或者使用浏览器自带的隐私浏览模式，拿到 `Token` 后，关闭隐私窗口，再登录一次即可！
+如果要添加多个账号，请删除浏览器缓存。或者使用浏览器自带的隐私浏览模式，拿到Token后，关闭隐私窗口，再登录一次即可！
 ![img_20.png](assets/img_20.png)
 ![img_21.png](assets/img_21.png)
 
@@ -269,8 +263,4 @@ SC3_UID（可选）: 若不填会从SC3_SENDKEY自动解析。（形如 12345）
 
 2024.9.10 森空岛登入接口引入了数美接口，请求头必须传递dId参数，导致无法正常登陆
 
-
 现已解决，具体实现看`SecuritySm.py`文件
-
-
-
