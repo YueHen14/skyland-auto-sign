@@ -1,0 +1,8 @@
+#!/bin/bash
+# 华为云函数图自定义运行时 bootstrap
+# 确保文件具有可执行权限 (chmod +x bootstrap)
+if [ -f /var/runtime/bootstrap ]; then
+    exec /var/runtime/bootstrap
+else
+    /usr/bin/python3.8 -u /var/user/index.handler
+fi
