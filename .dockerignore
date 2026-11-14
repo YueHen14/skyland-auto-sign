@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+**/TOKEN.txt
+**/INPUT_HYPERGRYPH_TOKEN.txt
+**/config.ini
+logs
+**/__pycache__
+**/*.pyc
+build
+dist
+*.spec
+.venv
+test

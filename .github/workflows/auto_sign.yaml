@@ -1,5 +1,7 @@
 # run main.py
 name: Auto Sign
+permissions:
+  contents: read
 on:
   schedule:
     - cron: '0 1 * * *'
@@ -7,26 +9,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TZ: Asia/Shanghai
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Set up Python 3.13
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.13'
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install requests
-          pip install cryptography
+          python -m pip install -r requirements.txt
       - name: Run main.py
         env:
-          GitHub_Actions: true
-          # 对于多个账号一定会有人机验证问题，且因为是密码，有一定的安全风险
-          # PHONE: ${{ secrets.PHONE }}
-          # PASSWORD: ${{ secrets.PASSWORD }}
           TOKEN: ${{ secrets.TOKEN }}
           SC3_SENDKEY: ${{ secrets.SC3_SENDKEY }}
           SC3_UID: ${{ secrets.SC3_UID }}
-          EXIT_WHEN_FAIL: ${{ vars.EXIT_WHEN_FAIL }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          QMSG_TOKEN: ${{ secrets.QMSG_TOKEN }}
+          EXIT_WHEN_FAIL: ${{ vars.EXIT_WHEN_FAIL || 'on' }}
+          EXIT_WHEN_PUSH_FAIL: ${{ vars.EXIT_WHEN_PUSH_FAIL || 'off' }}
         run: |
           python src/main.py

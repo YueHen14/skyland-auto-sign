@@ -4,4 +4,12 @@ skyland.spec
 logs
 .idea
 TOKEN.txt
-.pyc
+*.pyc
+__pycache__/
+.venv/
+.env
+.env.*
+src/push/config.ini
+INPUT_HYPERGRYPH_TOKEN.txt
+**/INPUT_HYPERGRYPH_TOKEN.txt
+*.spec

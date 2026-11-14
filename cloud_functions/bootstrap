@@ -1,0 +1,38 @@
+#!/bin/sh
+set -eu
+
+: "${RUNTIME_API_ADDR:?FunctionGraph RUNTIME_API_ADDR is required}"
+CODE_ROOT="${RUNTIME_CODE_ROOT:-$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)}"
+export RUNTIME_CODE_ROOT="$CODE_ROOT"
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+trap 'exit 0' HUP INT TERM
+API="http://$RUNTIME_API_ADDR/v1/runtime/invocation"
+
+while true; do
+    if ! curl -fsS --connect-timeout 5 --max-time 65 \
+        -D "$TEMP_DIR/headers" -o "$TEMP_DIR/event" "$API/request"; then
+        sleep 1
+        continue
+    fi
+    REQUEST_ID=$(awk 'tolower($1) == "x-cff-request-id:" {gsub("\r", "", $2); print $2; exit}' "$TEMP_DIR/headers")
+    case "$REQUEST_ID" in
+        ''|*[!a-zA-Z0-9_-]*) sleep 1; continue ;;
+    esac
+    if "$CODE_ROOT/index/index" > "$TEMP_DIR/response"; then
+        ENDPOINT=response
+    else
+        ENDPOINT=error
+    fi
+    if [ ! -s "$TEMP_DIR/response" ]; then
+        ENDPOINT=error
+        printf '{"errorType":"RuntimeFailure","errorMessage":"Sign-in program produced no response"}\n' > "$TEMP_DIR/response"
+    fi
+    # Do not retry the sign-in itself if acknowledgement fails.
+    if ! curl -fsS --connect-timeout 5 --max-time 10 \
+        -H 'Content-Type: application/json' --data-binary "@$TEMP_DIR/response" \
+        "$API/$ENDPOINT/$REQUEST_ID" > /dev/null; then
+        echo 'FunctionGraph response acknowledgement failed' >&2
+        exit 1
+    fi
+done

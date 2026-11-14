@@ -1,0 +1,33 @@
+{
+  "artifact": "cloud_functions.zip",
+  "sha256": "38949cc0cd8c16fc2679f55ded7eea677cac18fed6cccfb6cf3324b74703a8bc",
+  "size_bytes": 18190114,
+  "built_from_commit": "b90fa8eabe5479e17a2fd41671ccdcf63d19d2f3",
+  "equivalent_main_commit": "9a058208d49690cc8cebafe426845e5633670fc8",
+  "validated_build_run": "https://github.com/angel12538/skyland-auto-sign2/actions/runs/40869105633",
+  "build_info": {
+    "python": "3.11.18",
+    "machine": "x86_64",
+    "libc": [
+      "glibc",
+      "2.28"
+    ],
+    "credentials": "not included"
+  },
+  "account_file_empty": true,
+  "runtime_files_sha256_lf": {
+    "src/http_client.py": "065fbbf246060d3308443dd96ded188d15a7c63145bfef81b88e4829b4bf1422",
+    "src/index.py": "0bdda101ee97b58b75e02854cf9859bb7feacbca18d903b360515b4f276f9919",
+    "src/main.py": "5283f32d63a89e3847466a5af2f44235e8184f41b2c299b4e864ffc79a92b28e",
+    "src/push/__init__.py": "08395b2ba8371f673e23a49d80d43e2f1bd9ecc6c60eda9fa2e26fc0f37011cb",
+    "src/push/common.py": "0c889b5017bbb8dbd73298a2e76fb56d1678d9d72b7495ef3f2cae054e903cc9",
+    "src/push/pushplus.py": "097891a9b1903b45608d19d31e5ad02a460ce158693b9295371fb2bc97968ccf",
+    "src/push/qmsg.py": "35ad3c2430a007ea13d710492e3562e840b6265825073ef929ad1362c2c72789",
+    "src/push/serverchan3.py": "fa1fcdd48c388f240bdb348dcb5fa178de6e66bb56d1b57bf027241847a8a6e9",
+    "src/safe_logging.py": "573209593b2858586a8b3b9e0a3f0adfb3dcc4767c946762d4d4896da1cff72a",
+    "src/SecuritySm.py": "3c0d25395ec2147b2b98e0b8f9db0d1c9de729cb50aa82f6567e4637ac9efc70",
+    "src/skyland.py": "2143af807afa79987836b7aee1834a281727de4d39b493bad7216790054d9f2e",
+    "requirements.txt": "13c8707c721b442614984713627790c9651608bf808edf88c702de50b9cb4db9",
+    "cloud_functions/bootstrap": "c38a24d5a341193c076aea902111436189b9d99c4274f22074b956ba7656ceba"
+  }
+}

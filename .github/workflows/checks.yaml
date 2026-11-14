@@ -1,0 +1,63 @@
+name: Checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s test -v
+      - run: python -m pip check
+      - run: |
+          sh -n cloud_functions/bootstrap
+          sh -n .build/build_cloud_function.sh
+          sh -n .build/build_linux.sh
+  cloud-package:
+    needs: test
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Build and smoke-check Linux x86_64 package (glibc 2.28)
+        run: |
+          docker run --rm -v "$PWD:/workspace" -w /workspace \
+            quay.io/pypa/manylinux_2_28_x86_64@sha256:e0adf18521ad35192df733a6c62d35df7801957d24e0470238aacecfab2188a3 \
+            /bin/sh .build/build_linux.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: functiongraph-linux-x86_64
+          path: dist/cloud_functions.zip
+          if-no-files-found: error
+  docker:
+    needs: test
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Verify local credentials cannot enter the image
+        run: |
+          printf 'FAKE_DOCKER_CREDENTIAL_SENTINEL' > TOKEN.txt
+          printf '[PUSH_CONFIG]\nSC3_SENDKEY=SCT_FAKE_DOCKER_SENTINEL\n' > src/push/config.ini
+          docker build -t skyland-check .
+          docker run --rm --entrypoint sh skyland-check -c \
+            'test ! -e /app/TOKEN.txt && test ! -e /app/src/push/config.ini && test ! -e /app/.git && test "$(id -u)" != 0'
+          docker run --rm --entrypoint python skyland-check -m pip check

@@ -1,16 +1,17 @@
-FROM ghcr.io/astral-sh/uv:python3.13-alpine
+FROM python:3.13-slim@sha256:2d44738ebf4ce5f63b9d9ea871e9c7cfdc0426f7b0c97cac915fd88ded1d86bb
 
 WORKDIR /app
-COPY . .
+COPY requirements.txt ./
 
-RUN uv pip install --system -r requirements.txt
-RUN mkdir -p logs
+RUN python -m pip install --no-cache-dir -r requirements.txt
+COPY src ./src
+RUN useradd --uid 10001 --create-home skyland && mkdir -p logs && chown -R skyland:skyland /app
 
 ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ENV TOKEN=""
 ENV SC3_SENDKEY=""
 ENV SC3_UID=""
+USER skyland
 
 CMD ["python", "src/main.py" ]

@@ -1,2 +1,9 @@
-requests
-cryptography
+# Runtime lock (Python 3.11+). Update together with the regression checks.
+requests==2.34.2
+cryptography==50.0.2
+certifi==2026.10.23
+charset-normalizer==3.5.2
+idna==3.20
+urllib3==2.8.0
+cffi==2.1.1
+pycparser==3.12

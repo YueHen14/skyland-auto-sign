@@ -1,56 +1,37 @@
-import logging
 import os
 import re
 from datetime import date
-from typing import Tuple
+from urllib.parse import quote
 
-import requests
+import http_client as requests
+from push.common import check_response
+from safe_logging import register_secret
 
 
-def _format_serverchan_desp(all_logs: list[str]) -> str:
+def _format_serverchan_desp(all_logs):
     if not all_logs:
         return '今日无可用账号或无输出'
-
-    lines: list[str] = []
+    lines = []
     for item in all_logs:
-        text = item.replace('\r\n', '\n')
-        parts = text.split('\n\n')
-        if not parts:
-            lines.append('')
-            continue
-        lines.extend(parts)
-
-    # Server酱 desp 使用 Markdown，单换行会折叠为一个空格，需要显式换行。
+        lines.extend(item.replace('\r\n', '\n').splitlines())
     return '  \n'.join(line.rstrip() for line in lines)
 
 
-def push_serverchan3(all_logs: list[str]):
-    # === Server酱³ 推送（可选，通过环境变量控制） ===
-    # 在本地或 GitHub Actions 设置：
-    #   SC3_SENDKEY: 必填
-
+def push_serverchan3(all_logs):
     sendkey = os.environ.get('SC3_SENDKEY', '').strip()
     if not sendkey:
-        return
-
-    title = f'森空岛自动签到结果 - {date.today().strftime("%Y-%m-%d")}'
-
-    desp = _format_serverchan_desp(all_logs)
-
-    api = f"https://sctapi.ftqq.com/{sendkey}.send"
-    payload = {
-        "title": title or "通知",
-        "desp": desp or "",
-    }
-    # if tags:
-    #     payload["tags"] = tags
-    # if short:
-    #     payload["short"] = short
-
-    try:
-        r = requests.post(api, json=payload)
-        ok = (r.status_code == 200)
-        if not ok:
-            logging.error(f"serverchan推送失败,http代码{r.status_code},{r.text}")
-    except Exception as e:
-        logging.error("serverchan推送失败", exc_info=e)
+        return None
+    register_secret(sendkey)
+    escaped = quote(sendkey, safe='')
+    if sendkey.startswith('sctp'):
+        match = re.fullmatch(r'sctp(\d+)t\S+', sendkey)
+        if not match:
+            raise ValueError('Server酱³ SendKey 格式不正确')
+        api = f'https://{match.group(1)}.push.ft07.com/send/{escaped}.send'
+    elif sendkey.startswith('SCT'):
+        api = f'https://sctapi.ftqq.com/{escaped}.send'
+    else:
+        raise ValueError('SendKey 应以 sctp（Server酱³）或 SCT（Turbo）开头')
+    payload = {'title': f'森空岛自动签到结果 - {date.today().isoformat()}',
+               'desp': _format_serverchan_desp(all_logs)}
+    return check_response(requests.post(api, json=payload), 'Server酱', 'code', 0)

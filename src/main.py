@@ -1,96 +1,56 @@
-import json
 import logging
-import os
-import time
+import sys
 from datetime import date
-
-import requests
+from pathlib import Path
 
 import push
+from http_client import env_bool
+from safe_logging import RedactingFilter, redact
 from skyland import start
 
-exit_when_fail_env = os.environ.get('EXIT_WHEN_FAIL')
-use_proxy = os.environ.get('USE_PROXY')
 
-def config_logger():
-    current_date = date.today().strftime('%Y-%m-%d')
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
+def config_logger(log_to_file=True):
     logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    if not logger.handlers:
+        console = logging.StreamHandler(sys.stderr)
+        console.setFormatter(formatter)
+        logger.addHandler(console)
+    if log_to_file:
+        Path('logs').mkdir(exist_ok=True)
+        filename = str(Path('logs', date.today().isoformat() + '.log').resolve())
+        if not any(isinstance(h, logging.FileHandler) and h.baseFilename == filename for h in logger.handlers):
+            handler = logging.FileHandler(filename, encoding='utf-8')
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+    for handler in logger.handlers:
+        if not any(isinstance(f, RedactingFilter) for f in handler.filters):
+            handler.addFilter(RedactingFilter())
 
-    file_handler = logging.FileHandler(f'./logs/{current_date}.log', encoding='utf-8')
-    logger.addHandler(file_handler)
-    logger.setLevel(logging.DEBUG)
-    file_handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
 
-    console_handler = logging.StreamHandler()
-    # console_formatter = logging.Formatter('%(message)s')
-    # console_handler.setFormatter(console_formatter)
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+def run(tokens=None, interactive=None, log_to_file=True):
+    config_logger(log_to_file)
+    try:
+        push.load_config_to_env()
+        success, logs = start(tokens=tokens, interactive=interactive)
+    except Exception as exc:
+        success, logs = False, [f'启动失败：{redact(exc)}']
+        logging.error(logs[0])
+    logs = [redact(item) for item in logs]
+    push_success = push.push(logs)
+    return {'success': success, 'push_success': push_success, 'logs': logs}
 
-    def filter_code(text):
-        filter_key = ['code', 'cred', 'token']
-        try:
-            j = json.loads(text)
-            if not j.get('data'):
-                return text
-            data = j['data']
-            for i in filter_key:
-                if i in data:
-                    data[i] = '*****'
-            return json.dumps(j, ensure_ascii=False)
-        except:
-            return text
 
-    _get = requests.get
-    _post = requests.post
+def exit_code(result):
+    failed = not result['success'] and env_bool('EXIT_WHEN_FAIL', default=True)
+    push_failed = not result['push_success'] and env_bool('EXIT_WHEN_PUSH_FAIL')
+    return int(failed or push_failed)
 
-    def get(*args, **kwargs):
-        if use_proxy:
-            kwargs.update({
-                'proxies': {
-                    'https': 'http://localhost:8000',
-                },
-                'verify': False
-            })
-        response = _get(*args, **kwargs)
-        logger.debug(f'GET {args[0]} - {response.status_code} - {filter_code(response.text)}')
-        return response
 
-    def post(*args, **kwargs):
-        if use_proxy:
-            kwargs.update({
-                'proxies': {
-                    'https': 'http://localhost:8000',
-                },
-                'verify': False
-            })
-        response = _post(*args, **kwargs)
-        logger.debug(f'POST {args[0]} - {response.status_code} - {filter_code(response.text)}')
-        return response
-
-    # 替换 requests 中的方法
-    requests.get = get
-    requests.post = post
+def main():
+    return exit_code(run())
 
 
 if __name__ == '__main__':
-    config_logger()
-
-    print('本项目源代码仓库：https://github.com/xxyz30/skyland-auto-sign(因白嫖action被github封禁)')
-    print('https://gitee.com/FancyCabbage/skyland-auto-sign')
-    logging.info('=========starting==========')
-    start_time = time.time()
-    success, all_logs = start()
-    push.push(all_logs)
-    end_time = time.time()
-    logging.info(f'complete with {(end_time - start_time) * 1000} ms')
-    logging.info('===========ending============')
-
-    logging.info(f'exit_when_fail_env: {exit_when_fail_env}, success: {success}')
-    if (exit_when_fail_env == "on") and not success:
-        exit(1)
+    raise SystemExit(main())
